@@ -16,10 +16,13 @@ ARG TARGETPLATFORM
 
 # Add system deps for building
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    autoconf \
+    automake \
     clang \
     lld \
     curl \
     make \
+    git \
     pkg-config \
     dpkg-dev
 
@@ -28,11 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN xx-apt-get install -y \
     binutils \
     gcc \
+    g++ \
     libc6-dev \
     zlib1g-dev
 
 # vcftools
 WORKDIR /build/vcftools
-RUN curl -fsSL https://github.com/vcftools/vcftools/releases/download/v0.1.16/vcftools-0.1.16.tar.gz \
-    | tar xzvpf - --no-same-owner --strip-components=2
-RUN ./configure --host=$(xx-clang --print-target-triple) --prefix=$PWD/built && make && make install
+RUN git clone --single-branch --branch fix-cross-compile https://github.com/victorlin/vcftools .
+RUN ./autogen.sh && ./configure --build=$(TARGETPLATFORM= xx-clang --print-target-triple) --host=$(xx-clang --print-target-triple) --prefix=$PWD/built && make && make install
